@@ -550,7 +550,7 @@ function avisoCliente(p, e, dom, tel) {
   const clave = {'Recibido': 'msg_recibido', 'En Ruta': 'msg_en_ruta', 'Entregado': 'msg_entregado'}[e];
   const etq = {'Recibido': 'Confirmar pedido', 'En Ruta': 'Avisar: va en camino', 'Entregado': 'Avisar: entregado'}[e];
   const a = (orig && orig.anuncios) || {};
-  if (!clave || tel.length < 10 || !a[clave]) return '';
+  if (e === 'Entregado' || !clave || tel.length < 10 || !a[clave]) return '';
   const tiempo = (dom ? a.tiempo_entrega : a.tiempo_recoger) || 'unos minutos';
   const total = p.total ? (String(p.total).indexOf('$') > -1 ? p.total : '$' + p.total) : '';
   const txt = String(a[clave]).replace(/\{nombre\}/g, String(p.nombre || '').split(' ')[0]).replace(/\{total\}/g, total).replace(/\{tiempo\}/g, tiempo);
