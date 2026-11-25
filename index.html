@@ -234,7 +234,6 @@ body.sync #btnRecargar .rot,body.sync #btnAct .rot{animation:giro .8s linear inf
 [data-tema=claro] header{background:rgba(241,245,249,.92)}
 [data-tema=claro] .ped-prod{background:#eef2f7;color:#0f172a}
 [data-tema=claro] .ped-chip,[data-tema=claro] .ped-hora{color:#334155}
-@media(max-width:430px){#btnRecargar{font-size:0}#btnRecargar .rot{font-size:1rem}.top h2{font-size:1.05rem}.top .btn{padding-left:12px;padding-right:12px;min-width:0}.top>div{gap:6px!important}}
 [data-tema=claro] .tabs{background:rgba(255,255,255,.98)!important}
 [data-tema=claro] #barra{background:rgba(255,255,255,.96)}
 [data-tema=claro] .ped-dir{color:#334155}
@@ -276,6 +275,7 @@ body.sync #btnRecargar .rot,body.sync #btnAct .rot{animation:giro .8s linear inf
     <h3>🔐 Seguridad</h3>
     <p id="seguInfo"></p>
     <button class="btn" id="btnToggleHuella" type="button"></button>
+    <button class="btn sec" id="btnTema" type="button" style="min-height:48px">🎨 Cambiar tema de color</button>
     <button class="btn sec" id="btnTodos" type="button" style="min-height:48px">Cerrar sesión en todos los dispositivos</button>
     <button class="btn sec" id="btnCerrarSegu" type="button" style="min-height:48px">Cerrar</button>
   </div>
@@ -302,7 +302,6 @@ body.sync #btnRecargar .rot,body.sync #btnAct .rot{animation:giro .8s linear inf
       <div style="display:flex;gap:8px">
         <button class="btn sec" id="btnRecargar" type="button" aria-label="Actualizar"><span class="rot">↻</span></button>
         <button class="btn sec" id="btnSegu" type="button" aria-label="Seguridad">🔐</button>
-        <button class="btn sec" id="btnTema" type="button" aria-label="Tema">🎨</button>
         <button class="btn sec" id="btnSalir" type="button">Salir</button>
       </div>
     </div>
@@ -866,7 +865,7 @@ function aplicarTema(t) {
 }
 (function () { let t = 'cian'; try { t = localStorage.getItem('sw_tema') || 'cian'; } catch (_) {} aplicarTema(t); })();
 document.querySelectorAll('#temas .tema').forEach(b => b.addEventListener('click', () => aplicarTema(b.dataset.t)));
-$('#btnTema').addEventListener('click', () => $('#temas').classList.remove('oculto'));
+$('#btnTema').addEventListener('click', () => { $('#segu').classList.add('oculto'); $('#temas').classList.remove('oculto'); });
 $('#btnCerrarTemas').addEventListener('click', () => $('#temas').classList.add('oculto'));
 $('#temas').addEventListener('click', e => { if (e.target.id === 'temas') $('#temas').classList.add('oculto'); });
 </script>
