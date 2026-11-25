@@ -104,6 +104,9 @@ textarea.campo{min-height:92px;resize:vertical;line-height:1.4}
 #segu{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
 #segu .hoja{width:100%;max-width:460px;background:#0b1a2e;border:1px solid var(--borde);border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));display:grid;gap:10px}
 #segu h3{margin:0 0 2px}#segu p{margin:0;color:var(--muted);font-size:.85rem}
+.tkt{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:8px 0 0;min-height:44px;border-radius:14px;border:1px solid var(--borde);background:rgba(255,255,255,.06);color:inherit;font:inherit;font-weight:800;cursor:pointer}
+.tkt:active{transform:scale(.98)}
+@media print{body>*:not(#tkFrame){display:none!important}}
 .avisar{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 0;min-height:46px;border-radius:14px;border:1px solid #25d366;color:#7dffb0;font-weight:800;text-decoration:none;background:rgba(37,211,102,.10)}
 #conx{display:flex;align-items:center;gap:8px;margin:2px 0 8px;font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;width:fit-content;max-width:100%;padding:5px 12px;border-radius:999px;border:1px solid var(--borde);background:rgba(255,255,255,.03);transition:border-color .3s,color .3s}
 #conx .pt{flex:none;width:9px;height:9px;border-radius:50%;background:var(--ok);animation:latido 2.4s infinite}
@@ -272,7 +275,7 @@ body.sync #btnRecargar .rot,body.sync #btnAct .rot{animation:giro .8s linear inf
    CONFIGURACIÓN: pega aquí la URL de tu Apps Script de ADMIN
    (Implementar > Administrar implementaciones > URL de la app web)
    ============================================================ */
-const URL_ADMIN = 'https://script.google.com/macros/s/AKfycbyjQPVl8ALEuysfrxT5BhrXHNnHNrpaw2Or2JFjcaFouBLBZNhzRO8qZcqi8cO66l8/exec';
+const URL_ADMIN = 'PEGA_AQUI_LA_URL_DEL_APPS_SCRIPT_ADMIN';
 
 const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const TABS = [
@@ -479,7 +482,67 @@ function pintarPedidos() {
   bi.addEventListener('input', () => { busqPed = bi.value; const pos = bi.selectionStart; pintarPedidos(); const n = document.getElementById('busqPed'); n.focus(); n.setSelectionRange(pos, pos); });
   document.getElementById('btnAct').addEventListener('click', () => { toast('Actualizando…'); cargarPedidos(); });
   v.querySelectorAll('.est button, .next').forEach(b => b.addEventListener('click', () => cambiarEstatusPed(b)));
+  v.querySelectorAll('.tkt').forEach(b => b.addEventListener('click', () => { const p = pedidos.find(x => String(x.fila) === b.closest('.ped').dataset.fila); if (p) imprimirTicket(p); }));
   v.querySelectorAll('.vermas').forEach(b => b.addEventListener('click', () => { const f = b.closest('.ped').dataset.fila; if (abiertos.has(f)) abiertos.delete(f); else abiertos.add(f); pintarPedidos(); }));
+}
+/* ===== Ticket 58 mm (sin QR) ===== */
+function ticketHTML(p) {
+  const e = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+  const num = v => { const n = parseFloat(String(v == null ? '' : v).replace(/[^\d.\-]/g, '')); return isNaN(n) ? null : n; };
+  const din = v => { const n = num(v); return n == null ? '0.00' : n.toFixed(2); };
+  const dom = /domic/i.test(p.metodo) || (!p.metodo && p.calle);
+  const tel10 = String(p.telefono || '').replace(/\D/g, '').slice(-10);
+  const a = (orig && orig.anuncios) || {}, w = String(a.whatsapp || '').replace(/\D/g, '').slice(-10);
+  const wa = w.length === 10 ? w.slice(0, 3) + '-' + w.slice(3, 6) + '-' + w.slice(6) : '';
+  // Productos: "2x Nombre ($129.00)" + líneas "   └ extra"
+  const items = [];
+  String(p.productos || '').split('\n').forEach(l => {
+    const t = l.trim(); if (!t) return;
+    if (t.charAt(0) === '└') { if (items.length) items[items.length - 1].extra.push(t.replace(/^└\s*/, '')); return; }
+    const m = t.match(/^(\d+)\s*x\s*(.+?)\s*\(\$?\s*([\d.,]+)\)\s*$/i);
+    if (m) items.push({c: m[1], n: m[2], p: m[3].replace(/,/g, ''), extra: []});
+    else items.push({c: '1', n: t, p: '', extra: []});
+  });
+  const filas = items.map(i => `<tr><td>${e(i.c)}</td><td>${e(i.n)}${i.extra.filter(x => !/^Subtotal/i.test(x)).map(x => `<span class="ex">· ${e(x)}</span>`).join('')}</td><td style="text-align:right">${i.p === '' ? '' : din(i.p)}</td></tr>`).join('');
+  const sub = num(p.subtotal), env = num(p.envio);
+  const tot = num(p.total) != null ? num(p.total) : (sub != null ? sub + (env || 0) : 0);
+  const desg = (sub != null || env != null)
+    ? `<div class="desg">${sub != null ? `<div><span>Subtotal</span><span>$${din(sub)}</span></div>` : ''}${dom ? `<div><span>Envío</span><span>$${din(env || 0)}</span></div>` : ''}</div>` : '';
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Ticket ${e(p.nombre)}</title><style>
+@page{size:58mm auto;margin:0}
+body{font-family:'Courier New',monospace;margin:0;padding:5px;color:#000;background:#fff;display:flex;justify-content:center}
+.t{width:200px;box-sizing:border-box;padding:4px}
+.h{text-align:center;border-bottom:1.5px solid #000;margin-bottom:6px;padding-bottom:6px}
+.l{font-size:18px;font-weight:bold;letter-spacing:1px}.s{font-size:9px;text-transform:uppercase}
+.i{font-size:10px;margin-bottom:8px;line-height:1.25;word-wrap:break-word}
+table{width:100%;border-collapse:collapse;font-size:10px}
+th{border-bottom:1px solid #000;text-align:left;padding:3px 0}
+td{padding:4px 0;border-bottom:1px dashed #ccc;vertical-align:top;word-wrap:break-word}
+td:nth-child(3){white-space:nowrap}
+.ex{display:block;font-size:9px;line-height:1.2;padding-left:4px}
+.desg{margin-top:8px;font-size:10px}.desg div{display:flex;justify-content:space-between}
+.tot{margin-top:6px;text-align:right;border-top:1.5px solid #000;padding-top:4px;font-size:13px}
+.f{text-align:center;font-size:9px;margin-top:10px;padding-top:6px;line-height:1.2}
+@media print{body{padding:0;background:#fff}.t{padding:0}}
+</style></head><body><div class="t">
+<div class="h"><div class="l">SPACE WINGS</div><div class="s">Sabor que te eleva</div></div>
+<div class="i"><b>PEDIDO:</b> #${e(p.fila)}<br><b>CLIENTE:</b> ${e(p.nombre) || 'VENTA GENERAL'}<br><b>FECHA:</b> ${e(p.fecha)}<br><b>ENTREGA:</b> ${dom ? 'Domicilio' : 'Recoger'}${dom && (p.calle || p.colonia) ? `<br><b>DIR:</b> ${e(p.calle)}${p.colonia ? ', ' + e(p.colonia) : ''}` : ''}${tel10.length === 10 ? `<br><b>TEL:</b> ${e(tel10)}` : ''}</div>
+<table><thead><tr><th style="width:25px">CAN</th><th>PRODUCTO</th><th style="text-align:right;width:55px">TOTAL</th></tr></thead><tbody>${filas}</tbody></table>
+${desg}<div class="tot"><strong>TOTAL: $${din(tot)}</strong></div>
+<div class="f">¡GRACIAS POR TU PREFERENCIA!${wa ? `<br><b>WA: ${e(wa)}</b>` : ''}<p style="font-size:8px;margin:6px 0 0">*** Comprobante de Venta ***</p></div>
+</div></body></html>`;
+}
+function imprimirTicket(p) {
+  try {
+    let fr = document.getElementById('tkFrame');
+    if (fr) fr.remove();
+    fr = document.createElement('iframe'); fr.id = 'tkFrame';
+    fr.setAttribute('aria-hidden', 'true');
+    fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;pointer-events:none';
+    document.body.appendChild(fr);
+    const d = fr.contentWindow.document; d.open(); d.write(ticketHTML(p)); d.close();
+    setTimeout(() => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (x) { toast('No se pudo abrir la impresión'); } }, 250);
+  } catch (x) { toast('No se pudo generar el ticket'); }
 }
 function siguiente(p, e, dom) { return e === 'Recibido' ? (dom ? ['En Ruta', '🛵 Marcar En Ruta'] : ['Entregado', '✔ Marcar Entregado']) : e === 'En Ruta' ? ['Entregado', '✔ Marcar Entregado'] : null; }
 function avisoCliente(p, e, dom, tel) {
@@ -510,6 +573,7 @@ function tarjetaPed(p) {
     ${p.subtotal || p.envio ? `<div class="ped-desg"><span>Subtotal ${esc(money(p.subtotal))}</span><span>Envío ${esc(money(p.envio) || '$0')}</span></div>` : ''}
     ${sig ? `<button type="button" class="next" data-s="${sig[0]}">${sig[1]}</button>` : ''}
     ${avisoCliente(p, e, dom, tel)}
+    <button type="button" class="tkt" aria-label="Imprimir ticket">🖨️ Imprimir ticket</button>
     <div class="est">${ESTADOS.map(s => `<button type="button" data-s="${s}" class="${s === e ? 'on ' + cls(s) : ''}">${s}</button>`).join('')}</div></div>`;
 }
 async function cambiarEstatusPed(btn) {
