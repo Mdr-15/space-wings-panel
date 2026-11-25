@@ -3,16 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#050b14">
-<meta name="description" content="Panel de administración de Space Wings">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="admin.webmanifest">
+<link rel="apple-touch-icon" href="admin-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SW Admin">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<script src="config.js"></script>
 <title>Space Wings · Administrador</title>
 <style>
 :root{--bg:#050b14;--card:#0d1526;--card2:#111c33;--borde:rgba(255,255,255,.10);--cian:#00e5ff;--cian2:#00c8ff;--txt:#fff;--muted:#9fb0c8;--ok:#22c55e;--mal:#ef4444;--warn:#fbbf24;--grad:linear-gradient(135deg,#6af8ff,#00c8ff)}
@@ -98,38 +96,50 @@ textarea.campo{min-height:92px;resize:vertical;line-height:1.4}
 #barra{position:fixed;left:0;right:0;bottom:0;z-index:60;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:rgba(5,11,20,.95);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid rgba(0,229,255,.35);display:flex;gap:10px;justify-content:center;transform:translateY(120%);transition:transform .25s}
 #barra.on{transform:none}
 #barra .btn{flex:1;max-width:420px}
-.avisar{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 0;min-height:46px;border-radius:14px;border:1px solid #25d366;color:#7dffb0;font-weight:800;text-decoration:none;background:rgba(37,211,102,.10)}
+#bloqueo{position:fixed;inset:0;z-index:200;background:var(--bg,#050b14);display:flex;align-items:center;justify-content:center;padding:20px}
+#bloqueo .login-caja{max-width:340px}
+.huella{font-size:3.2rem;line-height:1;margin:6px 0 14px}
 .recordar{display:flex;align-items:center;gap:10px;margin:12px 2px 0;text-align:left;font-size:.88rem;color:var(--muted)}
 .recordar input{width:20px;height:20px;accent-color:#00e5ff;flex:none}
+#segu{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+#segu .hoja{width:100%;max-width:460px;background:#0b1a2e;border:1px solid var(--borde);border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));display:grid;gap:10px}
+#segu h3{margin:0 0 2px}#segu p{margin:0;color:var(--muted);font-size:.85rem}
+.avisar{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 0;min-height:46px;border-radius:14px;border:1px solid #25d366;color:#7dffb0;font-weight:800;text-decoration:none;background:rgba(37,211,102,.10)}
+#conx{display:flex;align-items:center;gap:8px;margin:2px 0 8px;font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;width:fit-content;max-width:100%;padding:5px 12px;border-radius:999px;border:1px solid var(--borde);background:rgba(255,255,255,.03);transition:border-color .3s,color .3s}
+#conx .pt{flex:none;width:9px;height:9px;border-radius:50%;background:var(--ok);animation:latido 2.4s infinite}
+#conx.ok{color:#b8f5cf;border-color:rgba(34,197,94,.35)}
+#conx.sync{color:#c8f8ff;border-color:rgba(0,229,255,.4)}
+#conx.sync .pt{width:11px;height:11px;background:transparent;border:2px solid rgba(0,229,255,.3);border-top-color:#00e5ff;animation:giro .7s linear infinite}
+#conx.warn{color:#ffe08a;border-color:rgba(251,191,36,.45)}#conx.warn .pt{background:var(--warn);animation:parpadeo 1.6s infinite}
+#conx.err{color:#ffb4b4;border-color:rgba(239,68,68,.5)}#conx.err .pt{background:var(--mal);animation:parpadeo .9s infinite}
+@keyframes latido{0%{box-shadow:0 0 0 0 rgba(34,197,94,.55)}70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+@keyframes giro{to{transform:rotate(360deg)}}
+@keyframes parpadeo{50%{opacity:.3}}
+#progreso{position:fixed;top:0;left:0;right:0;height:3px;z-index:300;overflow:hidden;opacity:0;transition:opacity .2s;pointer-events:none}
+body.sync #progreso{opacity:1}
+#progreso::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(90deg,transparent,#00e5ff,transparent);animation:barra 1.1s ease-in-out infinite}
+@keyframes barra{from{transform:translateX(-100%)}to{transform:translateX(260%)}}
+.rot{display:inline-block}
+body.sync #btnRecargar .rot,body.sync #btnAct .rot{animation:giro .8s linear infinite}
+.ped.trabajando{position:relative;overflow:hidden}
+.ped.trabajando::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,transparent,#00e5ff,transparent) no-repeat;background-size:45% 100%;animation:barra2 1s linear infinite}
+@keyframes barra2{from{background-position:-60% 0}to{background-position:170% 0}}
+.est button.trab{animation:brillo .8s ease-in-out infinite}
+@keyframes brillo{50%{filter:brightness(1.5)}}
+.spin{display:inline-block;width:16px;height:16px;border:3px solid rgba(3,16,24,.25);border-top-color:#031018;border-radius:50%;animation:giro .7s linear infinite;vertical-align:-3px;margin-right:6px}
+.est button .spin{width:12px;height:12px;border-width:2px;margin:0}
+.ped.ok-pop{animation:pop .55s ease}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.02);box-shadow:0 0 0 3px rgba(34,197,94,.5)}100%{transform:scale(1)}}
+.est button.pop{animation:popBtn .6s ease}
+@keyframes popBtn{0%{transform:scale(.85)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+.ped.sacudir{animation:sacudir .45s}
+@keyframes sacudir{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 #toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);z-index:90;background:#0b1a2e;border:1px solid var(--cian);border-radius:14px;padding:12px 18px;opacity:0;pointer-events:none;transition:.25s;max-width:90vw;text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 #toast.mal{border-color:var(--mal)}
 .cargando{text-align:center;color:var(--muted);padding:40px 0}
 @media (min-width:700px){.fila{grid-template-columns:1fr auto}}
-.imprimir{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:8px 0 10px;min-height:46px;border-radius:14px;border:1px solid var(--borde);color:#dbe6f5;font-weight:800;background:rgba(255,255,255,.04);cursor:pointer}
-.imprimir:active{transform:scale(.98)}
-/* Ticket de venta (papel de 58 mm). Solo se ve al imprimir. */
-#ticket-imp{display:none}
-@media print{
-  @page{size:58mm auto;margin:0}
-  body.imprimiendo>*:not(#ticket-imp){display:none!important}
-  body.imprimiendo{background:#fff!important;padding:0!important;margin:0!important;min-height:0!important;color:#000}
-  body.imprimiendo #ticket-imp{display:block!important}
-}
-#ticket-imp .tk{width:200px;background:#fff;color:#000;padding:4px;box-sizing:border-box;font-family:'Courier New',monospace}
-#ticket-imp .tk-h{text-align:center;border-bottom:1.5px solid #000;margin-bottom:6px;padding-bottom:6px}
-#ticket-imp .tk-logo{font-size:18px;font-weight:bold;letter-spacing:1px}
-#ticket-imp .tk-sub{font-size:9px;text-transform:uppercase}
-#ticket-imp .tk-info{font-size:10px;margin-bottom:8px;line-height:1.25;word-break:break-word}
-#ticket-imp table{width:100%;border-collapse:collapse;font-size:10px}
-#ticket-imp th{border-bottom:1px solid #000;text-align:left;padding:3px 0}
-#ticket-imp td{padding:4px 0;border-bottom:1px dashed #ccc;vertical-align:top;word-break:break-word}
-#ticket-imp td:nth-child(3){white-space:nowrap;text-align:right;padding-left:3px}
-#ticket-imp .tk-det{font-size:8px;color:#000;line-height:1.2;margin-top:1px}
-#ticket-imp .tk-tot{margin-top:8px;text-align:right;border-top:1.5px solid #000;padding-top:4px;font-size:10px;line-height:1.35}
-#ticket-imp .tk-tot strong{font-size:13px}
-#ticket-imp .tk-qr{display:flex;justify-content:center;margin:12px 0 4px}
-#ticket-imp .tk-pie{text-align:center;font-size:9px;margin-top:10px;border-top:1px solid #eee;padding-top:6px;line-height:1.25}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* Pedidos */
 .pt2{display:inline-block;min-width:18px;padding:0 6px;margin-left:6px;border-radius:9px;background:#ef4444;color:#fff;font-size:.72rem;font-weight:800}
@@ -200,19 +210,41 @@ textarea.campo{min-height:92px;resize:vertical;line-height:1.4}
 </style>
 </head>
 <body>
+<div id="progreso"></div>
 
 <!-- ENTRADA -->
 <section id="login">
   <form class="login-caja" id="formLogin" autocomplete="on">
     <h1>SPACE WINGS</h1>
     <p>Panel de administración</p>
-    <input class="campo oculto" type="url" id="apiUrl" placeholder="URL de la aplicación web (termina en /exec)" autocomplete="off" style="margin-bottom:10px;font-size:14px">
     <input class="campo" type="password" id="clave" placeholder="Contraseña" autocomplete="current-password" required>
     <label class="recordar"><input type="checkbox" id="chkRecordar" checked> Recordar este dispositivo (30 días)</label>
     <button class="btn" id="btnEntrar" type="submit">Entrar</button>
     <div class="error" id="errLogin"></div>
-    <button class="btn sec btn-instalar oculto" type="button" style="width:100%;margin-top:6px">⬇ Instalar aplicación</button>
   </form>
+</section>
+
+<!-- BLOQUEO CON HUELLA -->
+<section id="bloqueo" class="oculto">
+  <div class="login-caja">
+    <h1>SPACE WINGS</h1>
+    <div class="huella">🔒</div>
+    <p>Panel bloqueado</p>
+    <button class="btn" id="btnDesbloquear" type="button">Desbloquear con huella</button>
+    <button class="btn sec" id="btnOtraCuenta" type="button" style="width:100%;margin-top:10px">Usar contraseña</button>
+    <div class="error" id="errBloqueo"></div>
+  </div>
+</section>
+
+<!-- SEGURIDAD -->
+<section id="segu" class="oculto">
+  <div class="hoja">
+    <h3>🔐 Seguridad</h3>
+    <p id="seguInfo"></p>
+    <button class="btn" id="btnToggleHuella" type="button"></button>
+    <button class="btn sec" id="btnTodos" type="button" style="min-height:48px">Cerrar sesión en todos los dispositivos</button>
+    <button class="btn sec" id="btnCerrarSegu" type="button" style="min-height:48px">Cerrar</button>
+  </div>
 </section>
 
 <!-- PANEL -->
@@ -221,21 +253,27 @@ textarea.campo{min-height:92px;resize:vertical;line-height:1.4}
     <div class="top">
       <h2>SPACE <span>WINGS</span> Admin</h2>
       <div style="display:flex;gap:8px">
-        <button class="btn sec btn-instalar oculto" type="button">⬇ Instalar</button>
-        <button class="btn sec" id="btnRecargar" type="button">↻ Actualizar</button>
+        <button class="btn sec" id="btnRecargar" type="button" aria-label="Actualizar"><span class="rot">↻</span></button>
+        <button class="btn sec" id="btnSegu" type="button" aria-label="Seguridad">🔐</button>
         <button class="btn sec" id="btnSalir" type="button">Salir</button>
       </div>
     </div>
+    <div id="conx" class="sync" role="status" aria-live="polite"><span class="pt"></span><span class="ct">Conectando…</span></div>
     <nav class="tabs" id="tabs"></nav>
   </header>
   <main id="vista"><div class="cargando">Cargando datos…</div></main>
 </section>
 
 <div id="barra"><button class="btn sec" id="btnDescartar" type="button">Descartar</button><button class="btn" id="btnGuardar" type="button">Guardar cambios</button></div>
-<div id="ticket-imp" aria-hidden="true"></div>
 <div id="toast" role="status"></div>
 
 <script>
+/* ============================================================
+   CONFIGURACIÓN: pega aquí la URL de tu Apps Script de ADMIN
+   (Implementar > Administrar implementaciones > URL de la app web)
+   ============================================================ */
+const URL_ADMIN = 'https://script.google.com/macros/s/AKfycbyjQPVl8ALEuysfrxT5BhrXHNnHNrpaw2Or2JFjcaFouBLBZNhzRO8qZcqi8cO66l8/exec';
+
 const DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 const TABS = [
   {id:'pedidos',   t:'🧾 Pedidos'},
@@ -258,46 +296,53 @@ function toast(msg, mal) {
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('on'), 2600);
 }
 
-const enAppsScript = () => !!(window.google && google.script && google.script.run);
-function urlApi() { let u = String(window.SW_API_URL || '').trim(); if (!u) { try { u = localStorage.getItem('sw_api_url') || ''; } catch (_) {} } return u; }
-const URL_OK = /^https:\/\/script\.google\.com\/(a\/macros\/[^/]+\/|a\/[^/]+\/)?macros\/s\/[^/\s]+\/exec$/;
-
-function api(accion, extra) {
-  const req = Object.assign({accion: accion, token: token}, extra || {});
-  const revisar = j => { if (j && !j.ok && j.error === 'sesion') { cerrarSesion(true); throw new Error(j.mensaje); } return j; };
-  if (enAppsScript()) {            // abierto dentro de Apps Script (modo anterior)
-    return new Promise(function (resolve, reject) {
-      google.script.run
-        .withSuccessHandler(function (j) { try { resolve(revisar(j)); } catch (e) { reject(e); } })
-        .withFailureHandler(function (e) { reject(new Error((e && e.message) || 'No se pudo conectar')); })
-        .apiAdmin(req);
-    });
-  }
-  const url = urlApi();            // abierto desde GitHub Pages / app instalada
-  if (!url) return Promise.reject(new Error('Falta la URL de la aplicación web (Apps Script).'));
-  // text/plain evita la petición previa (preflight) que Apps Script no admite
-  return fetch(url, {method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(req)})
-    .then(r => { if (!r.ok) throw new Error('Error de conexión (' + r.status + ')'); return r.json(); })
-    .then(revisar)
-    .catch(e => { throw new Error(e instanceof TypeError ? 'No se pudo conectar. Revisa tu internet y la URL.' : ((e && e.message) || 'No se pudo conectar')); });
+async function apiRaw(accion, extra) {
+  if (URL_ADMIN.indexOf('PEGA_AQUI') === 0) throw new Error('Falta configurar URL_ADMIN en admin.html');
+  const r = await fetch(URL_ADMIN, { method: 'POST', headers: {'Content-Type': 'text/plain;charset=utf-8'},
+    body: JSON.stringify(Object.assign({accion, token}, extra || {})) });
+  const j = await r.json();
+  if (!j.ok && j.error === 'sesion') { cerrarSesion(true); throw new Error(j.mensaje); }
+  return j;
 }
+
+
+/* ---------- Indicador de conexión con la hoja + animaciones de trabajo ---------- */
+let ocupadoApi = 0, ultimaSync = 0, conxError = '', conxAviso = '';
+const hace = s => s < 60 ? s + ' s' : Math.floor(s / 60) + ' min';
+function conxPintar() {
+  const c = $('#conx'); if (!c) return;
+  let cls, txt;
+  if (ocupadoApi > 0) { cls = 'sync'; txt = 'Sincronizando…'; }
+  else if (conxError) { cls = 'err'; txt = 'Sin conexión con la hoja · toca para reintentar'; }
+  else if (conxAviso) { cls = 'warn'; txt = conxAviso; }
+  else if (!ultimaSync) { cls = 'sync'; txt = 'Conectando…'; }
+  else {
+    const s = Math.round((Date.now() - ultimaSync) / 1000);
+    if (s > 90) { cls = 'warn'; txt = 'Datos de hace ' + hace(s) + ' · toca para actualizar'; }
+    else { cls = 'ok'; txt = 'Conectado · datos al día' + (s >= 5 ? ' · hace ' + hace(s) : ''); }
+  }
+  c.className = cls; c.querySelector('.ct').textContent = txt;
+  document.body.classList.toggle('sync', ocupadoApi > 0);
+}
+async function api(accion, extra) {
+  ocupadoApi++; conxPintar();
+  try {
+    const j = await apiRaw(accion, extra);
+    conxError = ''; ultimaSync = Date.now();
+    conxAviso = (j && j.ok === false && j.error !== 'sesion') ? 'Aviso: ' + String(j.mensaje || 'la hoja respondió con un error').slice(0, 70) : '';
+    return j;
+  } catch (e) { if (token) conxError = e.message || 'error'; throw e; }
+  finally { ocupadoApi--; conxPintar(); }
+}
+setInterval(conxPintar, 5000);
+$('#conx').addEventListener('click', () => { if (token && !ocupadoApi) { toast('Actualizando…'); cargarPedidos(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && token) cargarPedidos(); });
 
 /* ---------- Sesión ---------- */
-/* Token: localStorage si se recordó el dispositivo; si no, sessionStorage */
-function guardarToken(t, recordar) {
-  token = t;
-  try { sessionStorage.removeItem('sw_tok'); localStorage.removeItem('sw_tok'); (recordar ? localStorage : sessionStorage).setItem('sw_tok', t); } catch(_){}
-}
-function leerToken() { try { return localStorage.getItem('sw_tok') || sessionStorage.getItem('sw_tok'); } catch(_) { return null; } }
 $('#formLogin').addEventListener('submit', async e => {
   e.preventDefault();
   const b = $('#btnEntrar'); b.disabled = true; b.textContent = 'Verificando…'; $('#errLogin').textContent = '';
   try {
-    if (!enAppsScript() && !String(window.SW_API_URL || '').trim()) {
-      const u = $('#apiUrl').value.trim();
-      if (!URL_OK.test(u)) throw new Error('Escribe la URL de la aplicación web de Apps Script (termina en /exec).');
-      try { localStorage.setItem('sw_api_url', u); } catch (_) {}
-    }
     const j = await api('login', {clave: $('#clave').value, recordar: $('#chkRecordar').checked});
     if (!j.ok) throw new Error(j.mensaje);
     guardarToken(j.token, !!j.recordado);
@@ -307,9 +352,17 @@ $('#formLogin').addEventListener('submit', async e => {
   b.disabled = false; b.textContent = 'Entrar';
 });
 
+/* Token: localStorage si se recordó el dispositivo; si no, sessionStorage */
+function guardarToken(t, recordar) {
+  token = t;
+  try { sessionStorage.removeItem('sw_tok'); localStorage.removeItem('sw_tok'); (recordar ? localStorage : sessionStorage).setItem('sw_tok', t); } catch(_){}
+}
+function leerToken() { try { return localStorage.getItem('sw_tok') || sessionStorage.getItem('sw_tok'); } catch(_) { return null; } }
+
 function cerrarSesion(porExpirar) {
   token = null; detenerPoll(); pedidos = []; maxFilaVista = null;
-  try { sessionStorage.removeItem('sw_tok'); localStorage.removeItem('sw_tok'); } catch(_){}
+  try { sessionStorage.removeItem('sw_tok'); localStorage.removeItem('sw_tok'); localStorage.removeItem('sw_cred'); } catch(_){}
+  bloqueado = false; $('#bloqueo').classList.add('oculto'); $('#segu').classList.add('oculto');
   $('#panel').classList.add('oculto'); $('#login').classList.remove('oculto'); $('#barra').classList.remove('on');
   if (porExpirar) $('#errLogin').textContent = 'Tu sesión expiró. Vuelve a entrar.';
 }
@@ -332,7 +385,6 @@ function normalizar() {
   edit.salsas.forEach(p => { p.disponible = esSi(p.disponible) ? 'SI' : 'NO'; });
   edit.anuncios.marquesina_activa = esSi(edit.anuncios.marquesina_activa) ? 'SI' : 'NO';
   edit.anuncios.secreto_activo = esSi(edit.anuncios.secreto_activo) ? 'SI' : 'NO';
-  edit.anuncios.seguimiento_activo = String(edit.anuncios.seguimiento_activo || '').trim().toUpperCase() === 'NO' ? 'NO' : 'SI';
 }
 
 /* ---------- Cambios ---------- */
@@ -420,16 +472,13 @@ function pintarPedidos() {
   const prevBusq = document.getElementById('busqPed');
   v.innerHTML = (errPed ? '<div class="panel" style="border-color:var(--mal)"><b>No se pudieron cargar los pedidos</b><p class="sub" style="margin:6px 0 0">' + esc(errPed) + '</p></div>' : '') +
     '<div class="filtros-wrap"><div class="filtros">' + filtros.map(f => `<button type="button" data-f="${f[0]}" class="${filtroPed === f[0] ? 'on' : ''} f-${cls(f[0])}">${f[1]} <i>${f[2]}</i></button>`).join('') + '</div></div>' +
-    `<div class="busq"><input id="busqPed" class="campo" type="search" placeholder="Buscar nombre, teléfono o colonia" value="${esc(busqPed)}"><button type="button" id="btnAct" aria-label="Actualizar">↻</button></div>` +
+    `<div class="busq"><input id="busqPed" class="campo" type="search" placeholder="Buscar nombre, teléfono o colonia" value="${esc(busqPed)}"><button type="button" id="btnAct" aria-label="Actualizar"><span class="rot">↻</span></button></div>` +
     (lista.length ? lista.map(tarjetaPed).join('') : '<div class="vacio">' + (pedidos.length ? 'No hay pedidos con este filtro.' : 'Aún no hay pedidos.') + '</div>');
   v.querySelectorAll('.filtros button').forEach(b => b.addEventListener('click', () => { filtroPed = b.dataset.f; pintarPedidos(); }));
   const bi = document.getElementById('busqPed');
   bi.addEventListener('input', () => { busqPed = bi.value; const pos = bi.selectionStart; pintarPedidos(); const n = document.getElementById('busqPed'); n.focus(); n.setSelectionRange(pos, pos); });
   document.getElementById('btnAct').addEventListener('click', () => { toast('Actualizando…'); cargarPedidos(); });
   v.querySelectorAll('.est button, .next').forEach(b => b.addEventListener('click', () => cambiarEstatusPed(b)));
-  v.querySelectorAll('.imprimir').forEach(b => b.addEventListener('click', () => {
-    const p = pedidos.find(x => String(x.fila) === b.closest('.ped').dataset.fila); if (p) imprimirTicket(p);
-  }));
   v.querySelectorAll('.vermas').forEach(b => b.addEventListener('click', () => { const f = b.closest('.ped').dataset.fila; if (abiertos.has(f)) abiertos.delete(f); else abiertos.add(f); pintarPedidos(); }));
 }
 function siguiente(p, e, dom) { return e === 'Recibido' ? (dom ? ['En Ruta', '🛵 Marcar En Ruta'] : ['Entregado', '✔ Marcar Entregado']) : e === 'En Ruta' ? ['Entregado', '✔ Marcar Entregado'] : null; }
@@ -461,69 +510,25 @@ function tarjetaPed(p) {
     ${p.subtotal || p.envio ? `<div class="ped-desg"><span>Subtotal ${esc(money(p.subtotal))}</span><span>Envío ${esc(money(p.envio) || '$0')}</span></div>` : ''}
     ${sig ? `<button type="button" class="next" data-s="${sig[0]}">${sig[1]}</button>` : ''}
     ${avisoCliente(p, e, dom, tel)}
-    <button type="button" class="imprimir">🖨️ Imprimir ticket</button>
     <div class="est">${ESTADOS.map(s => `<button type="button" data-s="${s}" class="${s === e ? 'on ' + cls(s) : ''}">${s}</button>`).join('')}</div></div>`;
 }
-/* ---------- Ticket de venta (58 mm) ---------- */
-const numTk = x => parseFloat(String(x == null ? '' : x).replace(/[^\d.]/g, '')) || 0;
-const dinero = n => n.toFixed(2);
-// Convierte el texto "2x Alitas ($120.00)\n   └ Salsa: BBQ" de la hoja en renglones del ticket
-function productosTicket(txt) {
-  const items = [];
-  String(txt || '').split(/\n\s*\n/).forEach(bloque => {
-    const ls = bloque.split('\n').map(l => l.replace(/\s+$/, '')).filter(l => l.trim());
-    if (!ls.length) return;
-    const m = /^\s*(\d+)\s*x\s+(.+?)\s*\(\$?\s*([\d.,]+)\s*\)\s*$/i.exec(ls[0]);
-    const det = ls.slice(1).map(l => l.replace(/^[\s└├│-]+/, '').trim()).filter(Boolean);
-    if (m) items.push({c: m[1], n: m[2], p: parseFloat(m[3].replace(/,/g, '')) || 0, d: det});
-    else items.push({c: '1', n: ls[0].trim(), p: null, d: det});
-  });
-  return items;
-}
-function cargarQR() {
-  if (window.QRCode) return Promise.resolve(true);
-  return new Promise(res => {
-    const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';
-    s.onload = () => res(!!window.QRCode); s.onerror = () => res(false); document.head.appendChild(s);
-    setTimeout(() => res(!!window.QRCode), 4000);
-  });
-}
-async function imprimirTicket(p) {
-  const dom = /domic/i.test(p.metodo) || (!p.metodo && p.calle), items = productosTicket(p.productos);
-  const sumaItems = items.reduce((t, i) => t + (i.p || 0), 0);
-  const subtotal = numTk(p.subtotal) || sumaItems, envio = numTk(p.envio), total = numTk(p.total) || (subtotal + envio);
-  const wa = String((orig && orig.anuncios && orig.anuncios.whatsapp) || '').replace(/\D/g, '').slice(-10);
-  const waTxt = wa.length === 10 ? wa.slice(0, 3) + '-' + wa.slice(3, 6) + '-' + wa.slice(6) : '';
-  const orden = p.fila;
-  const filas = items.map(i => `<tr><td style="width:25px">${esc(i.c)}</td><td>${esc(i.n)}${i.d.map(x => `<div class="tk-det">+ ${esc(x)}</div>`).join('')}</td><td>${i.p == null ? '' : dinero(i.p)}</td></tr>`).join('');
-  $('#ticket-imp').innerHTML = `<div class="tk">
-    <div class="tk-h"><div class="tk-logo">SPACE WINGS</div><div class="tk-sub">Sabor que te eleva</div></div>
-    <div class="tk-info"><b>ORDEN:</b> ${esc(orden)}<br><b>CLIENTE:</b> ${esc(p.nombre) || 'VENTA GENERAL'}<br><b>FECHA:</b> ${esc(p.fecha)}<br>
-      <b>ENTREGA:</b> ${dom ? 'Domicilio' : 'Recoger en tienda'}${dom && (p.calle || p.colonia) ? '<br><b>DIR:</b> ' + esc(p.calle) + (p.colonia ? ', ' + esc(p.colonia) : '') : ''}${p.telefono ? '<br><b>TEL:</b> ' + esc(p.telefono) : ''}</div>
-    <table><thead><tr><th style="width:25px">CAN</th><th>PRODUCTO</th><th style="text-align:right;width:55px">TOTAL</th></tr></thead><tbody>${filas}</tbody></table>
-    <div class="tk-tot">${envio ? 'Subtotal: $' + dinero(subtotal) + '<br>Envío: $' + dinero(envio) + '<br>' : ''}<strong>TOTAL: $${dinero(total)}</strong></div>
-    <div class="tk-qr" id="tk-qr"></div>
-    <div class="tk-pie">¡GRACIAS POR TU PREFERENCIA!${waTxt ? '<br><b>WA: ' + waTxt + '</b>' : ''}<p style="font-size:8px;margin:6px 0 0">*** Comprobante de Venta ***</p></div></div>`;
-  if (await cargarQR()) {      // si no hay internet, el ticket se imprime igual, sin QR
-    try { new QRCode($('#tk-qr'), {text: 'Orden:' + orden + '\nTotal:$' + dinero(total) + '\nSpace Wings', width: 100, height: 100, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M}); } catch (_) {}
-    await new Promise(r => setTimeout(r, 350));
-  }
-  document.body.classList.add('imprimiendo');
-  window.print();
-}
-window.addEventListener('afterprint', () => document.body.classList.remove('imprimiendo'));
-
 async function cambiarEstatusPed(btn) {
   const card = btn.closest('.ped'), nuevo = btn.dataset.s, p = pedidos.find(x => String(x.fila) === card.dataset.fila);
   if (!p || canon(p.estatus) === nuevo) return;
   if (nuevo === 'Cancelado' && !confirm('¿Cancelar el pedido de ' + (p.nombre || 'este cliente') + '?')) return;
-  const previo = p.estatus; card.querySelectorAll('.est button').forEach(b => b.disabled = true);
+  const previo = p.estatus; let exito = false;
+  card.classList.add('trabajando'); btn.classList.add('trab');
+  if (btn.classList.contains('next')) { btn.dataset.t = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>Guardando…'; }
+  else { btn.dataset.t = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>'; }
+  card.querySelectorAll('.est button, .next').forEach(b => b.disabled = true);
   try {
     const j = await api('estatus', {fila: p.fila, fecha: p.fecha, telefono: p.telefono, estatus: nuevo});
     if (!j.ok) throw new Error(j.mensaje);
-    p.estatus = nuevo; toast('✔ ' + (p.nombre || 'Pedido') + ': ' + nuevo);
+    p.estatus = nuevo; exito = true; toast('✔ ' + (p.nombre || 'Pedido') + ': ' + nuevo);
   } catch (err) { p.estatus = previo; toast('No se cambió: ' + err.message, true); }
   badgePedidos(); pintarPedidos();
+  const c2 = document.querySelector('.ped[data-fila="' + p.fila + '"]');
+  if (c2) { c2.classList.add(exito ? 'ok-pop' : 'sacudir'); const b2 = c2.querySelector('.est button[data-s="' + nuevo + '"]'); if (exito && b2) b2.classList.add('pop'); }
 }
 
 /* ---------- Pintado ---------- */
@@ -623,10 +628,10 @@ function pintarAnuncios() {
   }).join('');
   $('#vista').innerHTML = `
   <div class="panel"><h3>🛵 Envío del pedido y avisos al cliente</h3>
-    <p class="sub">Si apagas WhatsApp, el cliente ya no lo abre ni ve el aviso previo: su pedido se guarda en la hoja. El seguimiento (Enviado, Recibido, En ruta, Entregado) se puede mostrar u ocultar por separado. Desde la pestaña Pedidos, el botón “Avisar al cliente” abre WhatsApp con el mensaje listo.</p>
+    <p class="sub">Si lo apagas, el cliente ya no abre WhatsApp: su pedido se guarda y la página le muestra el seguimiento (Recibido, En ruta, Entregado). Desde la pestaña Pedidos, el botón “Avisar al cliente” abre WhatsApp con el mensaje listo.</p>
     <div class="interruptor"><b>Cliente envía el pedido por WhatsApp</b>${sw('', a.whatsapp_activo!=='NO', '', 'data-s="whatsapp_activo"')}</div>
-    <div class="interruptor"><b>Mostrar seguimiento del pedido al cliente</b>${sw('', a.seguimiento_activo!=='NO', '', 'data-s="seguimiento_activo"')}</div>
-    <p class="sub oculto" id="avisoAmbos" style="color:var(--warn);margin:6px 0 0">⚠️ Con WhatsApp y seguimiento apagados el cliente no recibe ninguna confirmación. Estarás atento solo desde la pestaña Pedidos.</p>
+    <div class="interruptor"><b>Seguimiento del pedido para el cliente</b>${sw('', a.seguimiento_activo!=='NO', '', 'data-s="seguimiento_activo"')}</div>
+    <p class="sub">Si lo apagas, el cliente no ve los pasos del pedido ni el aviso al volver a la página. Con el WhatsApp apagado y el seguimiento apagado, el cliente no tendrá forma de ver el estado de su pedido.</p>
     <label class="etq">Mensaje · pedido recibido</label><textarea class="campo" data-a="msg_recibido" maxlength="400">${esc(a.msg_recibido)}</textarea>
     <label class="etq">Mensaje · pedido en ruta</label><textarea class="campo" data-a="msg_en_ruta" maxlength="400">${esc(a.msg_en_ruta)}</textarea>
     <label class="etq">Mensaje · pedido entregado</label><textarea class="campo" data-a="msg_entregado" maxlength="400">${esc(a.msg_entregado)}</textarea>
@@ -656,10 +661,8 @@ function pintarAnuncios() {
   const prev = () => { $('#pvMarq').innerHTML = esc(a.marquesina_etiqueta) + ' &nbsp;' + negritas(a.marquesina_texto);
     [1,2,3].forEach(n => $('#pv'+n).innerHTML = '<b style="color:#9fb0c8">' + esc(a['mision_'+n+'_etiqueta']) + '</b><br>' + negritas(a['mision_'+n+'_texto'])); };
   prev();
-  const avisoAmbos = () => { const el = $('#avisoAmbos'); if (el) el.classList.toggle('oculto', !(a.whatsapp_activo === 'NO' && a.seguimiento_activo === 'NO')); };
-  avisoAmbos();
   document.querySelectorAll('[data-a]').forEach(el => el.addEventListener('input', () => { a[el.dataset.a] = el.value; prev(); actualizarBarra(); }));
-  document.querySelectorAll('[data-s]').forEach(el => el.addEventListener('change', () => { a[el.dataset.s] = el.checked ? 'SI' : 'NO'; avisoAmbos(); actualizarBarra(); }));
+  document.querySelectorAll('[data-s]').forEach(el => el.addEventListener('change', () => { a[el.dataset.s] = el.checked ? 'SI' : 'NO'; actualizarBarra(); }));
   document.querySelectorAll('.chips[data-m]').forEach(box => box.addEventListener('change', e => {
     const n = box.dataset.m, ins = [...box.querySelectorAll('input')], todos = ins[0];
     if (e.target === todos && todos.checked) ins.slice(1).forEach(i => i.checked = false);
@@ -670,25 +673,78 @@ function pintarAnuncios() {
   }));
 }
 
-/* ---------- Instalar como aplicación ---------- */
-let evInstalar = null;
-const esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const esInstalada = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
-function mostrarInstalar(v) { document.querySelectorAll('.btn-instalar').forEach(b => b.classList.toggle('oculto', !v)); }
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); evInstalar = e; mostrarInstalar(true); });
-window.addEventListener('appinstalled', () => { evInstalar = null; mostrarInstalar(false); toast('✔ Aplicación instalada'); });
-document.querySelectorAll('.btn-instalar').forEach(b => b.addEventListener('click', async () => {
-  if (evInstalar) { evInstalar.prompt(); try { await evInstalar.userChoice; } catch (_) {} evInstalar = null; mostrarInstalar(false); }
-  else if (esIOS) alert('Para instalar en iPhone o iPad: toca el botón Compartir (el cuadro con la flecha ⬆️) y elige “Agregar a pantalla de inicio”.');
-}));
-if (!enAppsScript()) {
-  if (esIOS && !esInstalada()) mostrarInstalar(true);
-  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
-  if (!String(window.SW_API_URL || '').trim()) { const c = $('#apiUrl'); c.classList.remove('oculto'); try { c.value = localStorage.getItem('sw_api_url') || ''; } catch (_) {} }
+/* ---------- Reanudar sesión ---------- */
+/* ---------- Bloqueo con huella (WebAuthn, solo local) ---------- */
+const b64 = {
+  a2s: a => btoa(String.fromCharCode.apply(null, new Uint8Array(a))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''),
+  s2a: s => Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0))
+};
+const credId = () => { try { return localStorage.getItem('sw_cred'); } catch(_) { return null; } };
+const huellaSoportada = () => !!(window.PublicKeyCredential && navigator.credentials && window.isSecureContext);
+const aleatorio = n => crypto.getRandomValues(new Uint8Array(n));
+
+async function activarHuella() {
+  const c = await navigator.credentials.create({ publicKey: {
+    challenge: aleatorio(32), rp: { name: 'Space Wings Admin' },
+    user: { id: aleatorio(16), name: 'admin', displayName: 'Administrador' },
+    pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+    authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
+    timeout: 60000, attestation: 'none' } });
+  localStorage.setItem('sw_cred', b64.a2s(c.rawId));
+}
+async function pedirHuella() {
+  await navigator.credentials.get({ publicKey: {
+    challenge: aleatorio(32), timeout: 60000, userVerification: 'required',
+    allowCredentials: [{ type: 'public-key', id: b64.s2a(credId()) }] } });
 }
 
-/* ---------- Reanudar sesión ---------- */
-(function(){ const t = leerToken(); if (t) { token = t; cargar(); } })();
+let bloqueado = false, ocultoDesde = 0;
+function bloquear() {
+  if (!token || !credId() || bloqueado) return;
+  bloqueado = true; $('#errBloqueo').textContent = ''; $('#bloqueo').classList.remove('oculto');
+}
+async function desbloquear() {
+  $('#errBloqueo').textContent = '';
+  try { await pedirHuella(); bloqueado = false; $('#bloqueo').classList.add('oculto'); }
+  catch (e) { $('#errBloqueo').textContent = 'No se pudo verificar. Intenta de nuevo.'; }
+}
+$('#btnDesbloquear').addEventListener('click', desbloquear);
+$('#btnOtraCuenta').addEventListener('click', () => { bloqueado = false; cerrarSesion(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) ocultoDesde = Date.now();
+  else if (token && credId() && ocultoDesde && Date.now() - ocultoDesde > 60000) { bloquear(); desbloquear(); }
+});
+
+/* Panel de seguridad */
+function pintarSegu() {
+  const on = !!credId();
+  $('#seguInfo').textContent = !huellaSoportada() ? 'Este navegador no permite huella (necesita HTTPS).'
+    : on ? 'Huella activa: se pide al abrir la app y al volver tras 1 minuto fuera.' : 'Activa la huella para proteger la app en este teléfono.';
+  const b = $('#btnToggleHuella'); b.textContent = on ? 'Quitar huella' : 'Activar huella'; b.disabled = !huellaSoportada();
+}
+$('#btnSegu').addEventListener('click', () => { pintarSegu(); $('#segu').classList.remove('oculto'); });
+$('#btnCerrarSegu').addEventListener('click', () => $('#segu').classList.add('oculto'));
+$('#btnToggleHuella').addEventListener('click', async () => {
+  try {
+    if (credId()) { localStorage.removeItem('sw_cred'); toast('Huella desactivada'); }
+    else {
+      try { if (!localStorage.getItem('sw_tok')) { toast('Entra con “Recordar este dispositivo” para usar huella', true); return; } } catch(_){}
+      await activarHuella(); toast('Huella activada ✔');
+    }
+  } catch (e) { toast('No se pudo activar la huella', true); }
+  pintarSegu();
+});
+$('#btnTodos').addEventListener('click', async () => {
+  if (!confirm('Se cerrará la sesión en TODOS los dispositivos (incluido este). ¿Continuar?')) return;
+  try { await api('salirTodos'); } catch(_){} cerrarSesion();
+});
+
+/* Arranque: reanuda sesión; si hay huella configurada, pide desbloqueo */
+(function(){
+  const t = leerToken(); if (!t) return;
+  token = t; cargar();
+  if (credId()) { bloquear(); desbloquear(); }
+})();
 </script>
 </body>
 </html>
