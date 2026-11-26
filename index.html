@@ -104,7 +104,7 @@ textarea.campo{min-height:92px;resize:vertical;line-height:1.4}
 #segu{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
 #segu .hoja{width:100%;max-width:460px;background:#0b1a2e;border:1px solid var(--borde);border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));display:grid;gap:10px}
 #segu h3{margin:0 0 2px}#segu p{margin:0;color:var(--muted);font-size:.85rem}
-.tkt{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:8px 0 0;min-height:44px;border-radius:14px;border:1px solid var(--borde);background:rgba(255,255,255,.06);color:inherit;font:inherit;font-weight:800;cursor:pointer}
+.tkt{display:inline-flex;align-items:center;justify-content:center;width:34px;height:24px;margin:-4px 0 -4px 8px;padding:0;vertical-align:middle;border-radius:9px;border:1px solid var(--borde);background:rgba(255,255,255,.06);color:inherit;font-size:.95rem;cursor:pointer}
 .tkt:active{transform:scale(.98)}
 @media print{body>*:not(#tkFrame){display:none!important}}
 .avisar{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 0;min-height:46px;border-radius:14px;border:1px solid #25d366;color:#7dffb0;font-weight:800;text-decoration:none;background:rgba(37,211,102,.10)}
@@ -608,7 +608,7 @@ function tarjetaPed(p) {
   const largo = String(p.productos).length > 110 || String(p.productos).split('\n').length > 3, abierto = abiertos.has(String(p.fila));
   const sig = siguiente(p, e, dom);
   return `<div class="ped ${cls(e)}" data-fila="${p.fila}" data-fecha="${esc(p.fecha)}" data-tel="${esc(p.telefono)}">
-    <div class="ped-top"><div><div class="ped-nom">${esc(p.nombre) || 'Sin nombre'}</div><div class="ped-hora">${hora}</div></div><div><div class="ped-tot">${esc(money(total))}</div><span class="ped-est ${cls(e)}">${esc(e)}</span></div></div>
+    <div class="ped-top"><div><div class="ped-nom">${esc(p.nombre) || 'Sin nombre'}</div><div class="ped-hora">${hora}<button type="button" class="tkt" aria-label="Imprimir ticket" title="Imprimir ticket">🖨️</button></div></div><div><div class="ped-tot">${esc(money(total))}</div><span class="ped-est ${cls(e)}">${esc(e)}</span></div></div>
     <div class="ped-chips"><span class="ped-chip ${dom ? 'dom' : ''}">${dom ? '🛵 Domicilio' : '🏪 Recoger'}</span>
       ${tel.length >= 10 ? `<a class="ped-chip" href="tel:${esc(tel)}">📞 Llamar</a><a class="ped-chip" target="_blank" rel="noopener" href="https://wa.me/${tel.length === 10 ? '52' + tel : tel}">💬 WhatsApp</a>` : (p.telefono ? `<span class="ped-chip">📞 ${esc(p.telefono)}</span>` : '')}</div>
     ${dom && (p.calle || p.colonia) ? `<div class="ped-dir">📍 ${esc(p.calle)}${p.colonia ? ', ' + esc(p.colonia) : ''}</div>` : ''}
@@ -617,7 +617,6 @@ function tarjetaPed(p) {
     ${p.subtotal || p.envio ? `<div class="ped-desg"><span>Subtotal ${esc(money(p.subtotal))}</span><span>Envío ${esc(money(p.envio) || '$0')}</span></div>` : ''}
     ${sig ? `<button type="button" class="next" data-s="${sig[0]}">${sig[1]}</button>` : ''}
     ${avisoCliente(p, e, dom, tel)}
-    <button type="button" class="tkt" aria-label="Imprimir ticket">🖨️ Imprimir ticket</button>
     <div class="est">${ESTADOS.map(s => `<button type="button" data-s="${s}" class="${s === e ? 'on ' + cls(s) : ''}">${s}</button>`).join('')}</div></div>`;
 }
 async function cambiarEstatusPed(btn) {
