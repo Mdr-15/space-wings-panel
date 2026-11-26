@@ -55,6 +55,8 @@ main{max-width:900px;margin:0 auto;padding:16px 14px}
 .seg button.on[data-v="OCULTO"]{background:#64748b;color:#fff}
 
 .nombre{font-weight:700;line-height:1.25}
+.etqsel{margin-top:6px;max-width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--borde);border-radius:10px;padding:6px 8px;font:inherit;font-size:.78rem;font-weight:700;min-height:34px}
+.etqsel.on{border-color:var(--cian);color:var(--cian)}
 .nombre small{display:block;color:var(--muted);font-weight:500;font-size:.78rem;margin-top:2px}
 .ctrl{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:flex-end}
 .precio{display:flex;align-items:center;background:var(--card2);border:1px solid var(--borde);border-radius:12px;padding:0 10px}
@@ -650,6 +652,27 @@ function pintarTabs() {
   document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { tabActual = b.dataset.id; pintarTabs(); badgePedidos(); pintar(); actualizarBarra(); if (tabActual === 'pedidos') cargarPedidos(); window.scrollTo({top:0}); }));
 }
 function estado3(v) { const u = String(v).trim().toUpperCase(); return u === 'SI' ? 'SI' : (u === 'OCULTO' ? 'OCULTO' : 'NO'); }
+
+/* ---------- Etiquetas de producto ("Más pedido", "Recomendado", "Nuevo") ---------- */
+const ETQ_OPC = [['', 'Sin etiqueta'], ['popular', '🔥 Más pedido'], ['recomendado', '⭐ Recomendado'], ['nuevo', '🆕 Nuevo']];
+function etqMapa() {
+  const m = {};
+  String((edit && edit.anuncios && edit.anuncios.etiquetas) || '').split(',').forEach(p => {
+    const kv = p.split(':'); if (kv.length === 2 && ETQ_OPC.some(o => o[0] && o[0] === kv[1].trim())) m[kv[0].trim()] = kv[1].trim();
+  });
+  return m;
+}
+function etqSelect(id) {
+  const v = etqMapa()[id] || '';
+  return `<select class="etqsel ${v ? 'on' : ''}" data-etq="${esc(id)}" aria-label="Etiqueta del producto">${ETQ_OPC.map(o => `<option value="${o[0]}" ${o[0] === v ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
+}
+function enlazarEtq() {
+  document.querySelectorAll('.etqsel').forEach(sel => sel.addEventListener('change', () => {
+    const m = etqMapa(); if (sel.value) m[sel.dataset.etq] = sel.value; else delete m[sel.dataset.etq];
+    edit.anuncios.etiquetas = Object.keys(m).map(k => k + ':' + m[k]).join(',');
+    sel.classList.toggle('on', !!sel.value); actualizarBarra();
+  }));
+}
 function seg(v) {
   return `<div class="seg" data-seg role="group" aria-label="Disponibilidad"><button type="button" data-v="SI" class="${v==='SI'?'on':''}">Disponible</button><button type="button" data-v="NO" class="${v==='NO'?'on':''}">Agotado</button><button type="button" data-v="OCULTO" class="${v==='OCULTO'?'on':''}">Oculto</button></div>`;
 }
@@ -660,17 +683,17 @@ function pintar() {
   const v = $('#vista');
   if (tabActual === 'pedidos') { pintarPedidos(); return; }
   if (tabActual === 'platillos') {
-    v.innerHTML = '<p class="nota">Cambia el precio y elige: <b>Disponible</b>, <b>Agotado</b> (se ve en el menú con el sello “Agotado hoy”) u <b>Oculto</b> (no aparece). “Medias” activa la media orden. Al guardar se actualiza la página de pedidos.</p><div class="lista">' +
-      edit.platillos.map((p, i) => `<div class="fila" data-i="${i}"><div class="nombre">${esc(p.producto)}<small>${esc(p.categoria)} · ${esc(p.id)}</small></div>
+    v.innerHTML = '<p class="nota">Cambia el precio y elige: <b>Disponible</b>, <b>Agotado</b> (se ve en el menú con el sello “Agotado hoy”) u <b>Oculto</b> (no aparece). “Medias” activa la media orden. Con “Etiqueta” destacas un producto en el menú (🔥 Más pedido, ⭐ Recomendado, 🆕 Nuevo). Al guardar se actualiza la página de pedidos.</p><div class="lista">' +
+      edit.platillos.map((p, i) => `<div class="fila" data-i="${i}"><div class="nombre">${esc(p.producto)}<small>${esc(p.categoria)} · ${esc(p.id)}</small>${etqSelect(p.id)}</div>
         <div class="ctrl"><div class="precio"><span>$</span><input inputmode="decimal" data-k="precio" value="${esc(p.precio)}" aria-label="Precio"></div>
         ${seg(p.disponible)}${sw('', p.medias==='SI', 'Medias', 'data-k="medias"')}</div></div>`).join('') + '</div>';
-    enlazarLista('platillos');
+    enlazarLista('platillos'); enlazarEtq();
   } else if (tabActual === 'combos') {
     v.innerHTML = '<p class="nota">Precio y estado de cada combo: Disponible, Agotado (se ve con el sello) u Oculto (no aparece).</p><div class="lista">' +
-      edit.combos.map((p, i) => `<div class="fila" data-i="${i}"><div class="nombre">${esc(p.producto)}<small>${esc(p.id)}</small></div>
+      edit.combos.map((p, i) => `<div class="fila" data-i="${i}"><div class="nombre">${esc(p.producto)}<small>${esc(p.id)}</small>${etqSelect(p.id)}</div>
         <div class="ctrl"><div class="precio"><span>$</span><input inputmode="decimal" data-k="precio" value="${esc(p.precio)}" aria-label="Precio"></div>
         ${seg(p.disponible)}</div></div>`).join('') + '</div>';
-    enlazarLista('combos');
+    enlazarLista('combos'); enlazarEtq();
   } else if (tabActual === 'salsas') {
     v.innerHTML = '<p class="nota">Apaga una salsa para que no aparezca en el menú. La intensidad (0–10) se muestra como 🔥.</p><div class="lista">' +
       edit.salsas.map((p, i) => `<div class="fila" data-i="${i}"><div class="nombre"><input class="campo salsa-nombre" data-k="sabor" value="${esc(p.sabor)}" maxlength="60" aria-label="Sabor"><small>${esc('🔥'.repeat(Math.max(0, Math.min(10, +p.intensidad || 0))))} · Id ${esc(p.id)}</small></div>
@@ -741,6 +764,9 @@ function pintarAnuncios() {
     <p class="sub">Si lo apagas, el cliente ya no abre WhatsApp: su pedido se guarda y la página le muestra el seguimiento (Recibido, En ruta, Entregado). Desde la pestaña Pedidos, el botón “Avisar al cliente” abre WhatsApp con el mensaje listo.</p>
     <div class="interruptor"><b>Cliente envía el pedido por WhatsApp</b>${sw('', a.whatsapp_activo!=='NO', '', 'data-s="whatsapp_activo"')}</div>
     <div class="interruptor"><b>Seguimiento del pedido para el cliente</b>${sw('', a.seguimiento_activo!=='NO', '', 'data-s="seguimiento_activo"')}</div>
+    <div class="interruptor"><b>🔔 Sonido cuando cambia su pedido</b>${sw('', a.aviso_sonido_activo!=='NO', '', 'data-s="aviso_sonido_activo"')}</div>
+    <div class="interruptor"><b>📳 Vibración (Android)</b>${sw('', a.aviso_vibracion_activo!=='NO', '', 'data-s="aviso_vibracion_activo"')}</div>
+    <p class="sub">Si el cliente tiene la página abierta, al pasar su pedido a Recibido, En ruta o Entregado se reproduce un sonido corto, vibra el teléfono y sale un aviso en pantalla. Funciona solo con la página abierta; en iPhone no vibra.</p>
     <p class="sub">Si lo apagas, el cliente no ve los pasos del pedido ni el aviso al volver a la página. Con el WhatsApp apagado y el seguimiento apagado, el cliente no tendrá forma de ver el estado de su pedido.</p>
     <label class="etq">Mensaje · pedido recibido</label><textarea class="campo" data-a="msg_recibido" maxlength="400">${esc(a.msg_recibido)}</textarea>
     <label class="etq">Mensaje · pedido en ruta</label><textarea class="campo" data-a="msg_en_ruta" maxlength="400">${esc(a.msg_en_ruta)}</textarea>
