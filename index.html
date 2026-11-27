@@ -167,6 +167,12 @@ body.sync #btnRecargar .rot,body.sync #btnAct .rot{animation:giro .8s linear inf
 .ped-datos div{font-size:.92rem;line-height:1.35;color:#eaf2ff;word-break:break-word}
 .ped-datos b{color:var(--muted);font-weight:700;margin-right:4px}
 .ped-datos .falta{color:var(--warn);font-weight:700}
+.ped.Preparando{border-left-color:#fb923c}.ped.Listopararecoger{border-left-color:#2dd4bf}
+.ped .est{grid-template-columns:repeat(5,1fr)}.ped .est button{padding:9px 1px;font-size:.64rem}
+.est button.on.Preparando{background:#fb923c;color:#2a1200}.est button.on.Listopararecoger{background:#2dd4bf;color:#032a26}
+.ped-est.Preparando{background:#fb923c;color:#2a1200}.ped-est.Listopararecoger{background:#2dd4bf;color:#032a26}
+.filtros button.on.f-Preparando{background:rgba(251,146,60,.18);border-color:#fb923c;color:#fed7aa}
+.filtros button.on.f-Listopararecoger{background:rgba(45,212,191,.18);border-color:#2dd4bf;color:#99f6e4}
 [data-tema=claro] .ped-datos div{color:#1e293b}
 .ped-prod{margin:10px 0;padding:10px 12px;background:#0a1222;border-radius:12px;font-size:.84rem;line-height:1.45;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto}
 .ped-desg{display:flex;gap:14px;font-size:.78rem;color:var(--muted);margin:0 0 10px}
@@ -485,10 +491,14 @@ $('#btnGuardar').addEventListener('click', async () => {
 window.addEventListener('beforeunload', e => { if (hayCambios()) { e.preventDefault(); e.returnValue = ''; } });
 
 /* ---------- Pedidos ---------- */
-const ESTADOS = ['Recibido','En Ruta','Entregado','Cancelado'];
+const ESTADOS = ['Recibido','Preparando','En Ruta','Listo para recoger','Entregado','Cancelado'];
+const ACTIVOS = ['Recibido','Preparando','En Ruta','Listo para recoger'];
+const etqEstado = s => s === 'Listo para recoger' ? 'Listo' : s;
+// Domicilio: Recibido > Preparando > En Ruta > Entregado | Recoger: Recibido > Preparando > Listo para recoger > Entregado (+ Cancelado)
+function estadosPara(dom, e) { const l = dom ? ['Recibido','Preparando','En Ruta','Entregado','Cancelado'] : ['Recibido','Preparando','Listo para recoger','Entregado','Cancelado']; if (l.indexOf(e) < 0) l[2] = e; return l; }
 let pedidos = [], busqPed = '', abiertos = new Set(), filtroPed = 'activos', pollPed = null, maxFilaVista = null, errPed = '';
 const sinAc = s => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-function canon(e) { const n = sinAc(e); if (!n || n.indexOf('recib') === 0) return 'Recibido'; if (n.indexOf('ruta') > -1) return 'En Ruta'; if (n.indexOf('entreg') === 0) return 'Entregado'; if (n.indexOf('cancel') === 0) return 'Cancelado'; return String(e); }
+function canon(e) { const n = sinAc(e); if (!n || n.indexOf('recib') === 0) return 'Recibido'; if (n.indexOf('prepar') === 0) return 'Preparando'; if (n.indexOf('listo') === 0) return 'Listo para recoger'; if (n.indexOf('ruta') > -1) return 'En Ruta'; if (n.indexOf('entreg') === 0) return 'Entregado'; if (n.indexOf('cancel') === 0) return 'Cancelado'; return String(e); }
 const cls = e => String(e).replace(/\s/g, '');
 function fechaPed(s) { const m = /(\d{1,2})\/(\d{1,2})\/(\d{4})[ ,]+(\d{1,2}):(\d{2})/.exec(String(s)); return m ? { d: +m[1], mo: +m[2], y: +m[3], h: +m[4], mi: +m[5] } : null; }
 function esHoy(s) { const f = fechaPed(s); if (!f) return false; const n = new Date(new Date().toLocaleString('en-US', {timeZone: 'America/Mexico_City'})); return f.d === n.getDate() && f.mo === n.getMonth() + 1 && f.y === n.getFullYear(); }
@@ -507,7 +517,7 @@ async function cargarPedidos() {
   badgePedidos(); if (tabActual === 'pedidos') pintarPedidos();
 }
 function badgePedidos() {
-  const n = pedidos.filter(p => { const e = canon(p.estatus); return e === 'Recibido' || e === 'En Ruta'; }).length;
+  const n = pedidos.filter(p => { const e = canon(p.estatus); return ACTIVOS.indexOf(e) > -1; }).length;
   const t = document.querySelector('.tab[data-id="pedidos"]'); if (!t) return;
   let b = t.querySelector('.pt2'); if (n && !b) { t.insertAdjacentHTML('beforeend', '<span class="pt2">' + n + '</span>'); } else if (n && b) b.textContent = n; else if (!n && b) b.remove();
 }
@@ -516,15 +526,15 @@ function iniciarPoll() { detenerPoll(); pollPed = setInterval(() => { if (!docum
 
 function pintarPedidos() {
   const v = $('#vista');
-  const cnt = {Recibido: 0, 'En Ruta': 0, Entregado: 0, Cancelado: 0};
+  const cnt = {Recibido: 0, Preparando: 0, 'En Ruta': 0, 'Listo para recoger': 0, Entregado: 0, Cancelado: 0};
   pedidos.forEach(p => { const e = canon(p.estatus); if (cnt[e] != null) cnt[e]++; });
   const nHoy = pedidos.filter(p => esHoy(p.fecha)).length, q = sinAc(busqPed);
   const lista = pedidos.filter(p => {
     const e = canon(p.estatus);
-    const okF = filtroPed === 'activos' ? (e === 'Recibido' || e === 'En Ruta') : filtroPed === 'hoy' ? esHoy(p.fecha) : filtroPed === 'todos' ? true : e === filtroPed;
+    const okF = filtroPed === 'activos' ? (ACTIVOS.indexOf(e) > -1) : filtroPed === 'hoy' ? esHoy(p.fecha) : filtroPed === 'todos' ? true : e === filtroPed;
     return okF && (!q || sinAc(p.nombre + ' ' + p.telefono + ' ' + p.colonia).indexOf(q) > -1);
   });
-  const filtros = [['activos', '🔥 Activos', cnt.Recibido + cnt['En Ruta']], ['Recibido', 'Recibido', cnt.Recibido], ['En Ruta', 'En Ruta', cnt['En Ruta']],
+  const filtros = [['activos', '🔥 Activos', cnt.Recibido + cnt.Preparando + cnt['En Ruta'] + cnt['Listo para recoger']], ['Recibido', 'Recibido', cnt.Recibido], ['Preparando', 'Preparando', cnt.Preparando], ['En Ruta', 'En Ruta', cnt['En Ruta']], ['Listo para recoger', 'Listo', cnt['Listo para recoger']],
     ['Entregado', 'Entregado', cnt.Entregado], ['Cancelado', 'Cancelado', cnt.Cancelado], ['hoy', 'Hoy', nHoy], ['todos', 'Todos', pedidos.length]];
   const prevBusq = document.getElementById('busqPed');
   v.innerHTML = (errPed ? '<div class="panel" style="border-color:var(--mal)"><b>No se pudieron cargar los pedidos</b><p class="sub" style="margin:6px 0 0">' + esc(errPed) + '</p></div>' : '') +
@@ -598,10 +608,15 @@ function imprimirTicket(p) {
     setTimeout(() => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (x) { toast('No se pudo abrir la impresión'); } }, 250);
   } catch (x) { toast('No se pudo generar el ticket'); }
 }
-function siguiente(p, e, dom) { return e === 'Recibido' ? (dom ? ['En Ruta', '🛵 Marcar En Ruta'] : ['Entregado', '✔ Marcar Entregado']) : e === 'En Ruta' ? ['Entregado', '✔ Marcar Entregado'] : null; }
+function siguiente(p, e, dom) {
+  if (e === 'Recibido') return ['Preparando', '👨‍🍳 Marcar Preparando'];
+  if (e === 'Preparando') return dom ? ['En Ruta', '🛵 Marcar En Ruta'] : ['Listo para recoger', '🛍️ Marcar Listo para recoger'];
+  if (e === 'En Ruta' || e === 'Listo para recoger') return ['Entregado', '✔ Marcar Entregado'];
+  return null;
+}
 function avisoCliente(p, e, dom, tel) {
-  const clave = {'Recibido': 'msg_recibido', 'En Ruta': 'msg_en_ruta', 'Entregado': 'msg_entregado'}[e];
-  const etq = {'Recibido': 'Confirmar pedido', 'En Ruta': 'Avisar: va en camino', 'Entregado': 'Avisar: entregado'}[e];
+  const clave = {'Recibido': 'msg_recibido', 'Preparando': 'msg_preparando', 'En Ruta': 'msg_en_ruta', 'Listo para recoger': 'msg_listo', 'Entregado': 'msg_entregado'}[e];
+  const etq = {'Recibido': 'Confirmar pedido', 'Preparando': 'Avisar: lo preparamos', 'En Ruta': 'Avisar: va en camino', 'Listo para recoger': 'Avisar: ya puede pasar', 'Entregado': 'Avisar: entregado'}[e];
   const a = (orig && orig.anuncios) || {};
   if (e === 'Entregado' || !clave || tel.length < 10 || !a[clave]) return '';
   const tiempo = (dom ? a.tiempo_entrega : a.tiempo_recoger) || 'unos minutos';
@@ -632,7 +647,7 @@ function tarjetaPed(p) {
     ${p.subtotal || p.envio ? `<div class="ped-desg"><span>Subtotal ${esc(money(p.subtotal))}</span><span>Envío ${esc(money(p.envio) || '$0')}</span></div>` : ''}
     ${sig ? `<button type="button" class="next" data-s="${sig[0]}">${sig[1]}</button>` : ''}
     ${avisoCliente(p, e, dom, tel)}
-    <div class="est">${ESTADOS.map(s => `<button type="button" data-s="${s}" class="${s === e ? 'on ' + cls(s) : ''}">${s}</button>`).join('')}</div></div>`;
+    <div class="est">${estadosPara(dom, e).map(s => `<button type="button" data-s="${s}" class="${s === e ? 'on ' + cls(s) : ''}">${etqEstado(s)}</button>`).join('')}</div></div>`;
 }
 async function cambiarEstatusPed(btn) {
   const card = btn.closest('.ped'), nuevo = btn.dataset.s, p = pedidos.find(x => String(x.fila) === card.dataset.fila);
@@ -771,15 +786,17 @@ function pintarAnuncios() {
   }).join('');
   $('#vista').innerHTML = `
   <div class="panel"><h3>🛵 Envío del pedido y avisos al cliente</h3>
-    <p class="sub">Si lo apagas, el cliente ya no abre WhatsApp: su pedido se guarda y la página le muestra el seguimiento (Recibido, En ruta, Entregado). Desde la pestaña Pedidos, el botón “Avisar al cliente” abre WhatsApp con el mensaje listo.</p>
+    <p class="sub">Si lo apagas, el cliente ya no abre WhatsApp: su pedido se guarda y la página le muestra el seguimiento (Recibido, Preparando, En ruta o Listo para recoger, Entregado). Desde la pestaña Pedidos, el botón “Avisar al cliente” abre WhatsApp con el mensaje listo.</p>
     <div class="interruptor"><b>Cliente envía el pedido por WhatsApp</b>${sw('', a.whatsapp_activo!=='NO', '', 'data-s="whatsapp_activo"')}</div>
     <div class="interruptor"><b>Seguimiento del pedido para el cliente</b>${sw('', a.seguimiento_activo!=='NO', '', 'data-s="seguimiento_activo"')}</div>
     <div class="interruptor"><b>🔔 Sonido cuando cambia su pedido</b>${sw('', a.aviso_sonido_activo!=='NO', '', 'data-s="aviso_sonido_activo"')}</div>
     <div class="interruptor"><b>📳 Vibración (Android)</b>${sw('', a.aviso_vibracion_activo!=='NO', '', 'data-s="aviso_vibracion_activo"')}</div>
-    <p class="sub">Si el cliente tiene la página abierta, al pasar su pedido a Recibido, En ruta o Entregado se reproduce un sonido corto, vibra el teléfono y sale un aviso en pantalla. Funciona solo con la página abierta; en iPhone no vibra.</p>
+    <p class="sub">Si el cliente tiene la página abierta, al cambiar el estado de su pedido se reproduce un sonido corto, vibra el teléfono y sale un aviso en pantalla. Funciona solo con la página abierta; en iPhone no vibra.</p>
     <p class="sub">Si lo apagas, el cliente no ve los pasos del pedido ni el aviso al volver a la página. Con el WhatsApp apagado y el seguimiento apagado, el cliente no tendrá forma de ver el estado de su pedido.</p>
     <label class="etq">Mensaje · pedido recibido</label><textarea class="campo" data-a="msg_recibido" maxlength="400">${esc(a.msg_recibido)}</textarea>
+    <label class="etq">Mensaje · estamos preparando el pedido</label><textarea class="campo" data-a="msg_preparando" maxlength="400">${esc(a.msg_preparando)}</textarea>
     <label class="etq">Mensaje · pedido en ruta</label><textarea class="campo" data-a="msg_en_ruta" maxlength="400">${esc(a.msg_en_ruta)}</textarea>
+    <label class="etq">Mensaje · listo para recoger en tienda</label><textarea class="campo" data-a="msg_listo" maxlength="400">${esc(a.msg_listo)}</textarea>
     <label class="etq">Mensaje · pedido entregado</label><textarea class="campo" data-a="msg_entregado" maxlength="400">${esc(a.msg_entregado)}</textarea>
     <p class="sub">Puedes usar {nombre}, {total} y {tiempo}.</p></div>
   <div class="panel"><h3>📱 WhatsApp de pedidos</h3><p class="sub">Número al que llegan los pedidos de la página y que aparece en “Soporte Base” del inicio. 10 dígitos o con lada (52…).</p>
