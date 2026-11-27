@@ -163,6 +163,11 @@ body.sync #btnRecargar .rot,body.sync #btnAct .rot{animation:giro .8s linear inf
 .ped-chip{padding:5px 10px;border-radius:999px;background:var(--card2);border:1px solid var(--borde);font-size:.78rem;color:#dbe6f5;text-decoration:none}
 .ped-chip.dom{border-color:rgba(var(--rgb),.5)}
 .ped-dir{margin:8px 0 0;font-size:.88rem;color:#dbe6f5}
+.ped-datos{margin:10px 0 0;display:grid;gap:5px;padding:10px 12px;border-radius:12px;background:rgba(var(--rgb),.06);border:1px solid rgba(var(--rgb),.18)}
+.ped-datos div{font-size:.92rem;line-height:1.35;color:#eaf2ff;word-break:break-word}
+.ped-datos b{color:var(--muted);font-weight:700;margin-right:4px}
+.ped-datos .falta{color:var(--warn);font-weight:700}
+[data-tema=claro] .ped-datos div{color:#1e293b}
 .ped-prod{margin:10px 0;padding:10px 12px;background:#0a1222;border-radius:12px;font-size:.84rem;line-height:1.45;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto}
 .ped-desg{display:flex;gap:14px;font-size:.78rem;color:var(--muted);margin:0 0 10px}
 .est{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--borde);border-radius:12px;overflow:hidden}
@@ -616,7 +621,12 @@ function tarjetaPed(p) {
     <div class="ped-top"><div><div class="ped-nom">${esc(p.nombre) || 'Sin nombre'}</div><div class="ped-hora">${hora}<button type="button" class="tkt" aria-label="Imprimir ticket" title="Imprimir ticket">🖨️</button></div></div><div><div class="ped-tot">${esc(money(total))}</div><span class="ped-est ${cls(e)}">${esc(e)}</span></div></div>
     <div class="ped-chips"><span class="ped-chip ${dom ? 'dom' : ''}">${dom ? '🛵 Domicilio' : '🏪 Recoger'}</span>
       ${tel.length >= 10 ? `<a class="ped-chip" href="tel:${esc(tel)}">📞 Llamar</a><a class="ped-chip" target="_blank" rel="noopener" href="https://wa.me/${tel.length === 10 ? '52' + tel : tel}">💬 WhatsApp</a>` : (p.telefono ? `<span class="ped-chip">📞 ${esc(p.telefono)}</span>` : '')}</div>
-    ${dom && (p.calle || p.colonia) ? `<div class="ped-dir">📍 ${esc(p.calle)}${p.colonia ? ', ' + esc(p.colonia) : ''}</div>` : ''}
+    <div class="ped-datos">
+      ${dom ? `<div>📍 <b>Calle y número:</b> ${p.calle ? esc(p.calle) : '<span class="falta">sin dato</span>'}</div>
+      <div>🏘️ <b>Colonia:</b> ${p.colonia ? esc(p.colonia) : '<span class="falta">sin dato</span>'}</div>
+      ${!p.calle && !p.colonia ? '<div class="falta">⚠️ Este pedido a domicilio no trae dirección. Revisa la hoja o llama al cliente.</div>' : ''}` : '<div>🏪 <b>Entrega:</b> el cliente recoge en tienda</div>'}
+      <div>📞 <b>Teléfono:</b> ${p.telefono ? esc(p.telefono) : '<span class="falta">sin dato</span>'}</div>
+    </div>
     <div class="ped-prod${largo && !abierto ? ' corto' : ''}">${esc(p.productos)}</div>
     ${largo ? `<button type="button" class="vermas">${abierto ? 'Ver menos ▴' : 'Ver todo el pedido ▾'}</button>` : ''}
     ${p.subtotal || p.envio ? `<div class="ped-desg"><span>Subtotal ${esc(money(p.subtotal))}</span><span>Envío ${esc(money(p.envio) || '$0')}</span></div>` : ''}
