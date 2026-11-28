@@ -408,7 +408,10 @@ $('#formLogin').addEventListener('submit', async e => {
   try {
     const j = await api('login', {clave: $('#clave').value, recordar: $('#chkRecordar').checked});
     if (!j.ok) throw new Error(j.mensaje);
-    guardarToken(j.token, !!j.recordado);
+    const quiso = $('#chkRecordar').checked;
+    // Si el usuario marcó "Recordar", se guarda el token en el dispositivo aunque el servidor no mande 'recordado' (versiones anteriores del Admin.gs).
+    guardarToken(j.token, !!j.recordado || quiso);
+    if (quiso && !j.recordado) setTimeout(() => toast('Ojo: tu Admin.gs no confirmó “recordar”. Si te vuelve a pedir la clave, actualiza el Admin.gs.', true), 600);
     $('#clave').value = '';
     await cargar();
   } catch (err) { $('#errLogin').textContent = err.message; }
@@ -894,7 +897,7 @@ $('#btnToggleHuella').addEventListener('click', async () => {
       try { if (!localStorage.getItem('sw_tok')) { toast('Entra con “Recordar este dispositivo” para usar huella', true); return; } } catch(_){}
       await activarHuella(); toast('Huella activada ✔');
     }
-  } catch (e) { toast('No se pudo activar la huella', true); }
+  } catch (e) { toast('No se pudo activar la huella (' + (e && e.name || 'error') + ')' + (e && e.name === 'NotAllowedError' ? ': cancelaste o el teléfono no tiene bloqueo de pantalla/huella configurado' : e && e.name === 'SecurityError' ? ': abre la app desde la dirección https' : ''), true); }
   pintarSegu();
 });
 $('#btnTodos').addEventListener('click', async () => {
