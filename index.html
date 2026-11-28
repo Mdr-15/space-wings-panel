@@ -422,12 +422,18 @@ $('#formLogin').addEventListener('submit', async e => {
 function guardarToken(t, recordar) {
   token = t;
   try { sessionStorage.removeItem('sw_tok'); localStorage.removeItem('sw_tok'); (recordar ? localStorage : sessionStorage).setItem('sw_tok', t); } catch(_){}
+  try { if (recordar) { document.cookie = 'sw_tok=' + encodeURIComponent(t) + ';max-age=2592000;path=/;SameSite=Lax;Secure'; if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } else document.cookie = 'sw_tok=;max-age=0;path=/'; } catch(_){}
 }
-function leerToken() { try { return localStorage.getItem('sw_tok') || sessionStorage.getItem('sw_tok'); } catch(_) { return null; } }
+function leerToken() {
+  let t = null; try { t = localStorage.getItem('sw_tok') || sessionStorage.getItem('sw_tok'); } catch(_) {}
+  if (!t) { try { const m = document.cookie.match(/(?:^|; )sw_tok=([^;]+)/); if (m) { t = decodeURIComponent(m[1]); try { localStorage.setItem('sw_tok', t); } catch(_) {} } } catch(_) {} }
+  return t;
+}
 
 function cerrarSesion(porExpirar) {
   token = null; detenerPoll(); pedidos = []; maxFilaVista = null;
   try { sessionStorage.removeItem('sw_tok'); localStorage.removeItem('sw_tok'); localStorage.removeItem('sw_cred'); } catch(_){}
+  try { document.cookie = 'sw_tok=;max-age=0;path=/'; } catch(_){}
   bloqueado = false; $('#bloqueo').classList.add('oculto'); $('#segu').classList.add('oculto');
   $('#panel').classList.add('oculto'); $('#login').classList.remove('oculto'); $('#barra').classList.remove('on');
   if (porExpirar) $('#errLogin').textContent = 'Tu sesión expiró. Vuelve a entrar.';
